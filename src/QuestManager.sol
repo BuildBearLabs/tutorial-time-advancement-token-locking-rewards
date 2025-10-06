@@ -2,8 +2,8 @@
 pragma solidity ^0.8.25;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {StringUtils} from "./library/StringUtils.sol";
-import {IERC20} from "./interfaces/IERC20.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {VerifySignature} from "./utils/VerifySignature.sol";
 
 /**
@@ -17,8 +17,9 @@ contract QuestManager is Ownable {
     */
     event QuestManager__EventCreated(string _id);
     event QuestManager__FundsLocked(string _id, address indexed token, uint256 amount);
-
+    event QuestManager__RewardClaimed(string _id, address indexed winner, uint256 amount);
     /*---------------Custom Types -----------------*/
+
     enum RewardType {
         ERC20, // default ERC20
         NATIVE
@@ -55,7 +56,7 @@ contract QuestManager is Ownable {
 
     /*---------------Storage Variables -----------------*/
 
-    using StringUtils for string;
+    using Strings for string;
 
     VerifySignature public immutable i_verificaitonContract;
     Quest[] public quests;
@@ -190,6 +191,7 @@ contract QuestManager is Ownable {
         unchecked {
             ++currentTotalWinners[_id];
         }
+        emit QuestManager__RewardClaimed(_id, address(winner), reward);
     }
 
     function calcuateTokenReward(string memory _questId) public view returns (uint256) {

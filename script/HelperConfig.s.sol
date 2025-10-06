@@ -10,42 +10,32 @@ contract HelperConfig is Script {
 
     NetworkConfig public activeNetworkConfig;
     uint256 public DEFAULT_ANVIL_PRIVATE_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+    mapping(uint256 chainId => NetworkConfig) public networkConfigs;
+
+    error HelperConfig__InvalidChainId();
 
     constructor() {
         /* Activate Mainnet Configs */
 
-        if (block.chainid == 1) {
-            activeNetworkConfig = getEthMainnetConfig();
-        } else if (block.chainid == 137) {
-            activeNetworkConfig = getPolygonMainnetConfig();
-        } else if (block.chainid == 8453) {
-            activeNetworkConfig = getBaseMainnetConfig();
-        } else if (block.chainid == 10) {
-            activeNetworkConfig = getOptimismMainnetConfig();
-        } else if (block.chainid == 42161) {
-            activeNetworkConfig = getArbitrumMainnetConfig();
-        }
-        /* Activate Testnet Configs */
-        else if (block.chainid == 11155111) {
-            activeNetworkConfig = getEthSepoliaConfig();
-        } else if (block.chainid == 80002) {
-            activeNetworkConfig = getPolygonAmoyConfig();
-        } else if (block.chainid == 11155420) {
-            activeNetworkConfig = getOptimismSepoliaConfig();
-        } else if (block.chainid == 84532) {
-            activeNetworkConfig = getBaseSepoliaConfig();
-        } else if (block.chainid == 421614) {
-            activeNetworkConfig = getArbitrumSepoliaConfig();
-        }
-        /* Activate Local Testnet Config */
-        else if (block.chainid == 31337) {
-            activeNetworkConfig = getOrCreateAnvilConfig();
-        }
+        networkConfigs[1] = getEthMainnetConfig();
+    }
+    //////////////////////////////////////////////////////////////*/
+
+    function getConfig() public view returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
     }
 
+    function getConfigByChainId(uint256 chainId) public view returns (NetworkConfig memory) {
+        if (networkConfigs[chainId].deployerKey != uint256(0)) {
+            return networkConfigs[chainId];
+        } else {
+            revert HelperConfig__InvalidChainId();
+        }
+    }
     /**
      * Testnet Configs
      */
+
     function getPolygonAmoyConfig() public view returns (NetworkConfig memory) {
         return NetworkConfig({deployerKey: vm.envUint("PRIVATE_KEY")});
     }

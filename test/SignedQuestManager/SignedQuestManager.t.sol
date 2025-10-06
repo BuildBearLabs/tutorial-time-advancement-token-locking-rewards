@@ -2,10 +2,10 @@
 pragma solidity ^0.8.25;
 
 import {Test} from "forge-std/Test.sol";
-import {MockToken} from "../../src/mocks/ERC20/MockToken.sol";
 import {QuestManager} from "../../src/QuestManager.sol";
 import {console} from "forge-std/console.sol";
 import {IERC20} from "../../src/interfaces/IERC20.sol";
+import {MainnetConstants} from "../../src/constants/MainnetConstants.sol";
 
 contract QuestManagerTest is Test {
     address owner = makeAddr("owner");
@@ -15,25 +15,32 @@ contract QuestManagerTest is Test {
     address user2 = makeAddr("user2");
     address user3 = makeAddr("user3");
     address user4 = makeAddr("user4");
+    MainnetConstants constants;
 
-    MockToken weth = new MockToken("WETH", "WETH", 18);
-    MockToken wmatic = new MockToken("WMATIC", "WMATIC", 18);
-    MockToken usdc = new MockToken("USDC", "USDC", 6);
-    MockToken just = new MockToken("JUST", "JUST", 24);
+    IERC20 weth;
+    IERC20 link;
+    IERC20 usdc;
 
     QuestManager questManager;
 
     function setUp() public {
+        string memory bbMainnet = vm.envString("BUILDBEAR_RPC");
+        uint256 fork = vm.createFork(bbMainnet);
+        vm.selectFork(fork);
+        constants = new MainnetConstants();
+        weth = IERC20(constants.WETH());
+        link = IERC20(constants.LINK());
+        usdc = IERC20(constants.USDC());
+
         string[] memory tokenNames = new string[](4);
         tokenNames[0] = "WETH";
-        tokenNames[1] = "WMATIC";
+        tokenNames[1] = "LINK";
         tokenNames[2] = "USDC";
-        tokenNames[3] = "JUST";
+
         address[] memory tokenAddresses = new address[](4);
         tokenAddresses[0] = address(weth);
-        tokenAddresses[1] = address(wmatic);
+        tokenAddresses[1] = address(link);
         tokenAddresses[2] = address(usdc);
-        tokenAddresses[3] = address(just);
 
         vm.deal(owner, 100 ether);
         // vm.deal(admin1, 100 ether);
@@ -47,37 +54,29 @@ contract QuestManagerTest is Test {
         questManager = new QuestManager(owner, tokenAddresses);
         questManager.transferOwnership(owner);
 
-        weth.mint(owner, 10);
-        weth.mint(admin1, 10);
-        weth.mint(admin2, 10);
-        weth.mint(user1, 10);
-        weth.mint(user2, 10);
-        weth.mint(user3, 10);
-        weth.mint(user4, 10);
+        deal(address(weth), owner, 10 ether);
+        deal(address(weth), admin1, 10 ether);
+        deal(address(weth), admin2, 10 ether);
+        deal(address(weth), user1, 10 ether);
+        deal(address(weth), user2, 10 ether);
+        deal(address(weth), user3, 10 ether);
+        deal(address(weth), user4, 10 ether);
 
-        usdc.mint(owner, 1000);
-        usdc.mint(admin1, 1000);
-        usdc.mint(admin2, 1000);
-        usdc.mint(user1, 1000);
-        usdc.mint(user2, 1000);
-        usdc.mint(user3, 10);
-        usdc.mint(user4, 10);
+        deal(address(usdc), owner, 1000 ether);
+        deal(address(usdc), admin1, 1000 ether);
+        deal(address(usdc), admin2, 1000 ether);
+        deal(address(usdc), user1, 1000 ether);
+        deal(address(usdc), user2, 1000 ether);
+        deal(address(usdc), user3, 10 ether);
+        deal(address(usdc), user4, 10 ether);
 
-        wmatic.mint(owner, 1000);
-        wmatic.mint(admin1, 1000);
-        wmatic.mint(admin2, 1000);
-        wmatic.mint(user1, 1000);
-        wmatic.mint(user2, 1000);
-        wmatic.mint(user3, 10);
-        wmatic.mint(user4, 10);
-
-        just.mint(owner, 100);
-        just.mint(admin1, 100);
-        just.mint(admin2, 100);
-        just.mint(user1, 100);
-        just.mint(user2, 100);
-        just.mint(user3, 10);
-        just.mint(user4, 10);
+        deal(address(link), owner, 1000 ether);
+        deal(address(link), admin1, 1000 ether);
+        deal(address(link), admin2, 1000 ether);
+        deal(address(link), user1, 1000 ether);
+        deal(address(link), user2, 1000 ether);
+        deal(address(link), user3, 10 ether);
+        deal(address(link), user4, 10 ether);
 
         vm.stopBroadcast();
 
@@ -94,14 +93,14 @@ contract QuestManagerTest is Test {
         (, uint256 key) = makeAddrAndKey("owner");
 
         vm.startBroadcast(owner);
-        just.approve(address(questManager), 1e24);
+        weth.approve(address(questManager), 1e18);
         questManager.createQuest(
             "4a",
             "Test Quest",
             block.timestamp,
             block.timestamp + 1 days,
-            address(just),
-            1e24,
+            address(weth),
+            1e18,
             QuestManager.RewardMethod(0),
             QuestManager.RewardType(0),
             3
@@ -120,15 +119,15 @@ contract QuestManagerTest is Test {
 
         vm.startBroadcast(user1);
 
-        uint256 balanceBeforeUser1 = just.balanceOf(user1);
+        uint256 balanceBeforeUser1 = weth.balanceOf(user1);
 
         vm.warp(block.timestamp + 16 days);
 
         questManager.claimRewards(owner, signature, "", "4a", payable(user1));
 
-        console.log("just balance of user1 ", just.balanceOf(user1) - balanceBeforeUser1);
+        console.log("weth balance of user1 ", weth.balanceOf(user1) - balanceBeforeUser1);
 
-        assert(just.balanceOf(user1) - balanceBeforeUser1 == rewards);
+        assert(weth.balanceOf(user1) - balanceBeforeUser1 == rewards);
         vm.stopBroadcast();
     }
 
@@ -136,14 +135,14 @@ contract QuestManagerTest is Test {
         (, uint256 key) = makeAddrAndKey("user2");
 
         vm.startBroadcast(user2);
-        just.approve(address(questManager), 1e24);
+        weth.approve(address(questManager), 1e18);
         questManager.createQuest(
             "4a",
             "Test Quest",
             block.timestamp,
             block.timestamp + 1 days,
-            address(just),
-            1e24,
+            address(weth),
+            1e18,
             QuestManager.RewardMethod(0),
             QuestManager.RewardType(0),
             3
@@ -208,7 +207,7 @@ contract QuestManagerTest is Test {
     function test_claimRewardsSignedByOwnerWithDBData() public {
         (, uint256 key) = makeAddrAndKey("owner");
         vm.startBroadcast(owner);
-        weth.mint(owner, 100);
+        deal(address(weth), owner, 100 ether);
         vm.stopBroadcast();
 
         vm.startBroadcast(owner);

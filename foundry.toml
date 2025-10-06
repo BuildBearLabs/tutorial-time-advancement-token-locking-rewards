@@ -2,27 +2,18 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+fs_permissions = [
+    { access = "read", path = "./broadcast/SignedQuestManager.Deploy.s.sol" },
+]
 
-remappings=["@openzeppelin/contracts=node_modules/@openzeppelin/contracts"]
+remappings = ["@openzeppelin/contracts=lib/openzeppelin-contracts/contracts/"]
 
 [rpc_endpoints]
-anvil_local="${ANVIL_LOCAL_TESTNET}"
-
-polygon_amoy = "${AMOY_RPC_URL}"
-base_sepolia = "${BASE_SEPOLIA_RPC}"
-optimism_sepolia = "${OPTIMISM_SEPOLIA}"
-eth_sepolia = "${ETHEREUM_SEPOLIA}"
-arbitrum_sepolia = "${ARBITRUM_SEPOLIA}"
-
-eth_mainnet = "${ETHEREUM_MAINNET}"
-base_mainnet = "${BASE_MAINNET}"
-polygon_mainnet = "${POLYGON_MAINNET}"
-optimism_mainnet = "${OPTIMISM_MAINNET}"
-arbitrum_mainnet = "${ARBITRUM_MAINNET}"
+buildbear = "${BUILDBEAR_RPC}"
 
 
-[etherscan]
-polygon_amoy = { key = "${POLYGONSCAN_API_KEY}", url="https://api-amoy.polygonscan.com/api?" }
-base_sepolia = { key = "${BASE_BLOCKSCOUT_API_KEY}", url="https://base-sepolia.blockscout.com/api" }
-eth_sepolia = { key = "${SEPOLIA_ETHERSCAN_API_KEY}", url="https://api-sepolia.etherscan.io/api" }
+# [etherscan]
+# buildbear = { key = "${POLYGONSCAN_API_KEY}", url = "https://api-amoy.polygonscan.com/api?" }
+# base_sepolia = { key = "${BASE_BLOCKSCOUT_API_KEY}", url = "https://base-sepolia.blockscout.com/api" }
+# eth_sepolia = { key = "${SEPOLIA_ETHERSCAN_API_KEY}", url = "https://api-sepolia.etherscan.io/api" }
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
